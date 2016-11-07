@@ -364,7 +364,7 @@ def to_usd(amount):
     # caching the exchange rate for 5 minutes
     if BTCUSD_RATE == 0 or BTCUSD_FETCHED + 300 < time.time():
         try:
-            resp = make_request('https://api.bitcoinaverage.com/ticker/global/USD/')
+            resp = make_request('https://apiv2.bitcoinaverage.com/indices/global/ticker/BTCUSD')
             jsonobj = json.loads(resp)
             BTCUSD_RATE = jsonobj['last']
             BTCUSD_FETCHED = time.time()
