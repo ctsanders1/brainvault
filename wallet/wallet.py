@@ -312,6 +312,13 @@ def sign_text(address):
     sig = ecdsa_sign(text, address.priv)
     print(sig)
 
+def dump_addr(wallet, path):
+    f = open(path, 'w')
+    for a in wallet.addresses:
+        f.write(a.addr + '\n')
+    f.close()
+    print('Addresses saved to a file succesfully')
+
 def display_help(cmds):
     print('Type [command] -h to display help for a command.')
     print('Available commands:')
@@ -421,6 +428,11 @@ def build_commands():
     signcmd.add_argument('idx', metavar = 'IDX', type=int,
                             help='Index of the address whose private key to sign with')
 
+    dumpaddrcmd = argparse.ArgumentParser(prog='dumpaddr', description='Dumps all generated '
+                            'addresses to a file')
+    dumpaddrcmd.add_argument('-p', '--path', help = 'The path to the file',
+                                default="addresses.txt")
+
     cmds = {}
     cmds['send'] = sendcmd
     cmds['list'] = listcmd
@@ -432,6 +444,7 @@ def build_commands():
     cmds['dumppriv'] = dumpprivcmd
     cmds['help'] = helpcmd
     cmds['sign'] = signcmd
+    cmds['dumpaddr'] = dumpaddrcmd
     return cmds
 
 def main():
@@ -566,6 +579,8 @@ def input_loop(cmds, wallet):
         print(wallet.get(cmd_args.idx).priv)
     elif c == 'sign':
         sign_text(wallet.get(cmd_args.idx))
+    elif c == 'dumpaddr':
+        dump_addr(wallet, cmd_args.path)
     elif c == 'exit':
         return False
     return True
