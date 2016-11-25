@@ -17,6 +17,7 @@ BTCUSD_RATE = 0
 BTCUSD_FETCHED = 0
 PROVIDER = None
 NO_FIAT = False
+RECOMMENDED_FEE = 100 # in satoshis per byte
 
 class Address:
     def __init__(self, exp):
@@ -136,11 +137,10 @@ def make_tx(address, to_address, change_address, amount, fee = None):
     outs = []
     ins = PROVIDER.get_utxo(address.addr)
     balance = sum(i['value'] for i in ins)
-    # default fee is 0.1 mBTC
-    basic_fee = SATOSHIS / 10000
+
     if fee is None:
         txsize = len(ins)*180 + 2*34 + 10 + len(ins)
-        fee = basic_fee * (1000 if txsize < 1000 else txsize) / 1000
+        fee = RECOMMENDED_FEE * txsize
 
     change_amt = 0
     if amount + fee >= balance:
@@ -197,7 +197,9 @@ def validate_tx(wallet, tx, chg_idx, from_addr, chg_address_str):
     print('Change: ' + chg_info)
 
     # print fee
-    print('Fee:    ' + colorize('yellow', '{}').format(fmt_satoshi(fee)))
+    btc_fee = fmt_satoshi(fee)
+    usd_fee = to_usd(btc_fee)
+    print('Fee:    ' + colorize('yellow', '{} (${:.2f})').format(btc_fee, usd_fee))
 
     # assert that all values add up and that nothing is lost
     assert fee + spending + chg_value == from_addr.balance
@@ -480,9 +482,17 @@ def main():
 
     args = parser.parse_args()
 
-    global NO_FIAT, PROVIDER
+    global NO_FIAT, PROVIDER, RECOMMENDED_FEE
     PROVIDER = get_provider_by_name(args.dataProvider)
     NO_FIAT = args.noConversion
+
+    try:
+        resp = make_request('https://bitcoinfees.21.co/api/v1/fees/recommended')
+        jsonobj = json.loads(resp)
+        RECOMMENDED_FEE = jsonobj['fastestFee']
+    except Exception as e:
+        print('Failed to fetch the recommended fee. '
+                'Using {} satoshis per byte'.format(RECOMMENDED_FEE))
 
     if args.url is not None:
         PROVIDER.host = args.url.strip().strip('/')
