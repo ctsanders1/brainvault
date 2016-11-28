@@ -489,7 +489,7 @@ def main():
     try:
         resp = make_request('https://bitcoinfees.21.co/api/v1/fees/recommended')
         jsonobj = json.loads(resp)
-        RECOMMENDED_FEE = jsonobj['fastestFee']
+        RECOMMENDED_FEE = min(1000, jsonobj['fastestFee'])
     except Exception as e:
         print('Failed to fetch the recommended fee. '
                 'Using {} satoshis per byte'.format(RECOMMENDED_FEE))
