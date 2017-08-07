@@ -17,6 +17,8 @@ def get_provider_by_name(name):
         return InsightProvider()
     if name == 'blockcypher':
         return BlockCypherProvider()
+    if name == 'file':
+        return FileProvider()
     raise Exception('No such data provider')
 
 class DataProvider:
@@ -186,6 +188,33 @@ class BlockCypherProvider(DataProvider):
     def name(self):
         return 'BlockCypher'
 
+class FileProvider(DataProvider):
+
+    def __init__(self):
+        self.host = 'utxo.json'
+        with open(self.host, 'r') as utxofile:
+            self.utxo = json.load(utxofile)
+
+    def get_address_info(self, addresses):
+        addr_info = []
+        for address in addresses:
+            addr_utxo = self.utxo.get(address)
+            if addr_utxo is None:
+                addr_info.append((0, 0))
+            else:
+                addr_info.append((sum(o['value'] for o in addr_utxo), len(addr_utxo)))
+        return addr_info
+
+    def get_utxo(self, address):
+        return self.utxo[address]
+
+    def pushtx_impl(self, tx):
+        print('Publishing not supported by this provider. Tx:')
+        print(tx)
+
+    def name(self):
+        return "File"
+
 def make_request(*args):
     opener = build_opener()
     opener.addheaders = [('User-agent', USER_AGENT)]
@@ -216,4 +245,3 @@ user_agents = [
 
 USER_AGENT = 'Mozilla/4.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/5.0)'
 #USER_AGENT = random.choice(user_agents)
-

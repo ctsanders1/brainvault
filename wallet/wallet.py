@@ -464,7 +464,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-d', '--dataProvider',
-                        choices=['blockchaininfo', 'blockr', 'insight', 'blockcypher'],
+                        choices=['blockchaininfo', 'blockr', 'insight', 'blockcypher', 'file'],
                         default='blockchaininfo', help = data_provider_help)
 
     parser.add_argument('-n', '--noConversion', action='store_true',
